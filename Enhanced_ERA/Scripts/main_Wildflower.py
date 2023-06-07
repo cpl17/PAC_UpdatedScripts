@@ -122,7 +122,10 @@ for d in labeled_plant_dicts.values(): # you can list as many input dicts as you
 index = labeled_plant_dicts.keys()
 full_df = pd.DataFrame(dd,index=index).reset_index()
 mapping = source_data[["USDA Symbol","Scientific Name"]].set_index("USDA Symbol").to_dict()
-full_df["index"] = full_df['index'].map(mapping["Scientific Name"])
+full_df["index"] = full_df['index'].map(mapping["Scientific Name"]) #TODO:This creates #N/A rows for symbols not in wildflower
+
+full_df["Color"].replace('Not Applicable', np.nan)
+full_df = full_df[~(full_df["index"] == "#N/A")]
 
 write_df_to_sheet("All_Scraped_Data_Original",f"Wildflower_{STATE}",full_df)
 
