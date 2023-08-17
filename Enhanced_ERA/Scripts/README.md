@@ -9,8 +9,11 @@ Each script scrapes one of the following resources:
 * USDA Plants: https://plants.usda.gov/home
 * Lady Bird Johnson Wildflower Center: https://www.wildflower.org/plants-main
 
+<br>
 
 The *Google.py* and *Helpers.py* contain functions for reading/writing from Google sheets and documents. 
+
+<br>
 
 The general procedure in each *main_\<resource\>* file is: 
 
@@ -25,6 +28,11 @@ The general procedure in each *main_\<resource\>* file is:
 The output is unique to each web page but includes data on height, color, sun exposure and other characteristics. 
 
 
+<br>
+<br>
+<br>
+
+
 **Data Quality Assurance**
 
 The *get_unique_values* script produces unique values for each column of data for each resource at two levels of granularity. 
@@ -34,9 +42,16 @@ The lower level separates each entry along commas and produces unqiue entries am
 
 This output was used to tailor the cleaning scripts and get an overview how to approach transforming the formatting to fit the ERA format. 
 
+<br>
+<br>
+<br>
+
+
 **Clean and Join**
 
+*clean.py* formats the raw data from each source according to the format of the ERA, selects the relevant columns and writes the cleaned data to a Google sheet
 
+*join.py* takes in a reduced version of the era that contains only columns to update. Then, for each source, for each column, updates a missing value if found. The updated "Reduced ERA" is written to a Google sheet. Then, the relevant columns of ERA sheet in the central db are overwritten using columns from the Reduced ERA. 
 
 
 
