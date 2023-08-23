@@ -2,7 +2,7 @@ import pandas as pd
 import os
 from Helpers import get_sheet_data,write_df_to_sheet
 from Google import Create_Service
-from googleapiclient.http import MediaFileUpload,MediaIoBaseDownload
+from googleapiclient.http import MediaIoBaseDownload
 import io
 
 CLIENT_SECRET_FILE = 'service_account.json'
