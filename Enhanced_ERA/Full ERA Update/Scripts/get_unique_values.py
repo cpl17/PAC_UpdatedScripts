@@ -4,7 +4,7 @@ from Helpers import get_sheet_data,write_df_to_sheet
 
 
 
-source_data = get_sheet_data("ERA","AL")
+source_data = get_sheet_data("ERAFull","ERAFull")
 
 
 resource_column_pairs = [
@@ -18,11 +18,13 @@ resource_column_pairs = [
 ]
 
 
+
+
 for resource,columns in resource_column_pairs:
 
 
     # # Summaries
-    data = get_sheet_data("All_Scraped_Data_Original",f"{resource}_AL")
+    data = get_sheet_data("All_Scraped_Data_Original_Full",f"{resource}")
     data.drop("index",axis=1,inplace=True)
     if "common name" in data.columns:
         data.drop("common name",axis=1,inplace=True)
@@ -40,7 +42,7 @@ for resource,columns in resource_column_pairs:
         else:
             full_df = df
     print(f"{resource}_TopLevel")
-    write_df_to_sheet("UniqueValues",f"{resource}_TopLevel",full_df)
+    write_df_to_sheet("UniqueValues_Full",f"{resource}_TopLevel",full_df)
 
 
     #Unique values bottom level on relevant columns ("Brown, Blue","Brown, Black" --> ["Brown","Blue","Black"])
@@ -73,5 +75,5 @@ for resource,columns in resource_column_pairs:
     for col in df:
         df[col] = df[col].apply(lambda x: x.strip().title() if not isinstance(x,float) else x).drop_duplicates()
 
-    write_df_to_sheet("UniqueValues",f"{resource}",df)
+    write_df_to_sheet("UniqueValues_Full",f"{resource}",df)
 

@@ -21,12 +21,10 @@ def number_to_excel_column(num):
     return column_name
 
 
-STATE = "AL"
-CURRENT_VERSION_DATE = "8_22"
 
-era_reduced = get_sheet_data("ERA", f"{STATE}_Reduced").set_index("Scientific Name") #ERA - Only contains to be updated columns
-era = get_sheet_data("ERA", f"{STATE}").set_index("Scientific Name") #Full Original ERA
-era_cnp = get_sheet_data(f"CNP AL Database {CURRENT_VERSION_DATE}","ERA_AL") #Enhanced ERA 
+era_reduced = get_sheet_data("ERAFull", "Reduced").set_index("Scientific Name") #ERA - Only contains to be updated columns
+era = get_sheet_data("ERAFull", "ERAFull").set_index("Scientific Name") #Full Original ERA
+era_cnp = get_sheet_data(f"Full_CNP_Database","Copy of ERA") #Enhanced ERA 
 
 
 #na's being written as "", replace as np.nan
@@ -46,7 +44,7 @@ print("Total Missing: ",era_reduced.isna().sum().sum())
 
 #Grab the Google Sheet with the scraped data from each source
 gc = gspread.service_account()
-sh = gc.open("All_Scraped_Data_Cleaned")
+sh = gc.open("All_Scraped_Data_Cleaned_Full")
 worksheet_list = sh.worksheets()
 
 
@@ -54,12 +52,9 @@ worksheet_list = sh.worksheets()
 #For each column, for each plant if missing in era and present in worksheet -> update value. Else, continue
 for worksheet in worksheet_list:
 
-    if STATE not in worksheet.title:
-        continue
-
     print(worksheet.title)
 
-    df = get_sheet_data("All_Scraped_Data_Cleaned",worksheet.title)
+    df = get_sheet_data("All_Scraped_Data_Cleaned_Full",worksheet.title)
     df.set_index("index",inplace=True)
 
     df_dict = df.to_dict()
@@ -84,7 +79,7 @@ for worksheet in worksheet_list:
     print(era_reduced_updated.isna().sum())
 
 #Write updated data 
-write_df_to_sheet("ERA_Updated_Data",f"{STATE}_Reduced",era_reduced_updated.reset_index())
+write_df_to_sheet("ERAFull","Updated",era_reduced_updated.reset_index())
 
 ################
 
@@ -93,8 +88,8 @@ number_of_rows = era_reduced_updated.shape[0] + 1
 list_of_excel_headers = [number_to_excel_column(num_index) for num_index in [era_cnp.columns.get_loc(col) + 1 for col in era_reduced_updated.columns]]
 
 gc = gspread.service_account()
-sh = gc.open(f"CNP AL Database {CURRENT_VERSION_DATE}")
-worksheet = sh.worksheet("ERA_AL")
+sh = gc.open("Full_CNP_Database")
+worksheet = sh.worksheet("Copy of ERA")
 
 era_reduced_updated = era_reduced_updated.fillna("") #To solve: Out of range float values are not JSON compliant
 print(era_reduced_updated.head())

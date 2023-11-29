@@ -5,17 +5,16 @@ import time
 
 from Helpers import get_sheet_data,write_df_to_sheet
 
-STATE = "AL"
 
-era_unique = get_sheet_data("UniqueValues",f"ERA_{STATE}") ###TODO: CHARNGE THIS to not test once other tasks are comleted 
-source_data = get_sheet_data("ERA",STATE)
+era_unique = get_sheet_data("UniqueValues_Full",f"ERA") ###TODO: CHARNGE THIS to not test once other tasks are comleted 
+source_data = get_sheet_data("ERAFull","ERAFull")
 
 
 
 ##################Gardenia##############
 RESOURCE = "Gardenia"
 
-data = get_sheet_data("All_Scraped_Data_Original",f"{RESOURCE}_{STATE}")
+data = get_sheet_data("All_Scraped_Data_Original_Full",RESOURCE)
 
 relevant_columns = ["index","Exposure","Height","Characteristics"]
 data= data[relevant_columns]
@@ -79,7 +78,7 @@ data["Sun Exposure"] = data["Exposure"].apply(clean_exposure)
 
 
 data.drop(["Exposure","Height","Characteristics"],axis=1,inplace=True)
-write_df_to_sheet("All_Scraped_Data_Cleaned",f"{RESOURCE}_{STATE}",data)
+write_df_to_sheet("All_Scraped_Data_Cleaned_Full",RESOURCE,data)
 
 time.sleep(15)
 
@@ -88,7 +87,7 @@ time.sleep(15)
 RESOURCE = "MissouriBotanical"
 
 
-data = get_sheet_data("All_Scraped_Data_Original",f"{RESOURCE}_{STATE}")
+data = get_sheet_data("All_Scraped_Data_Original_Full",RESOURCE)
 relevant_columns = ["index","Sun","Flower","Bloom Time","Height","Bloom Description","Water"]
 data= data[relevant_columns]
 
@@ -138,25 +137,23 @@ def determine_showy(cell_value):
 data["Showy"] = data["Flower"].apply(determine_showy)
 
 #Bloom Description -> Flower Color
-
-source_colors = era_unique["Flower Color"].dropna()
-
+source_colors = era_unique["Flower Color"]
+source_colors = source_colors[source_colors != ""].to_list()
 
 def determine_color(cell_value):
     if isinstance(cell_value,float):
         return cell_value
     
-    x = cell_value.replace("ish","")
+    x = cell_value.strip().replace("ish","").split(" ")[0].split("-")[0].split(",")[0].strip()
 
     for color in source_colors:
-        if color == x:
+        if (color == x) | (color in x):
             return color
-    for color in source_colors:
-        if color in x:
-            return color
-
+    
+    return np.nan
 
 data["Flower Color"] = data["Bloom Description"].apply(determine_color)
+
 
 
 # Sun -> Sun Exposure
@@ -204,7 +201,7 @@ data["Soil Moisture"] = data["Water"].apply(get_soilmoisture)
 
 
 data.drop(["Height","Bloom Time","Flower","Sun","Bloom Description","Water"],axis=1,inplace=True)
-write_df_to_sheet("All_Scraped_Data_Cleaned",f"{RESOURCE}_{STATE}",data)
+write_df_to_sheet("All_Scraped_Data_Cleaned_Full",RESOURCE,data)
 
 
 time.sleep(15)
@@ -216,7 +213,7 @@ time.sleep(15)
 
 
 RESOURCE = "NCSU"
-data = get_sheet_data("All_Scraped_Data_Original",f"{RESOURCE}_{STATE}")
+data = get_sheet_data("All_Scraped_Data_Original_Full",RESOURCE)
 relevant_columns = ["index","Dimensions","Flower Value To Gardener","Light"]
 data= data[relevant_columns]
 
@@ -294,7 +291,7 @@ def clean_exposure(cell_value):
 data["Sun Exposure"] = data["Light"].apply(clean_exposure)
 data.drop(["Dimensions","Flower Value To Gardener","Light"],axis=1,inplace=True)
 
-write_df_to_sheet("All_Scraped_Data_Cleaned",f"{RESOURCE}_{STATE}",data)
+write_df_to_sheet("All_Scraped_Data_Cleaned_Full",RESOURCE,data)
 
 
 time.sleep(15)
@@ -306,7 +303,7 @@ RESOURCE = "NewMoon"
 
 
 
-data = get_sheet_data("All_Scraped_Data_Original",f"{RESOURCE}_{STATE}")
+data = get_sheet_data("All_Scraped_Data_Original_Full",RESOURCE)
 relevant_columns = ["index","Height","Bloom Color","Exposure","Flowering Months","Soil Moisture Preference"]
 data= data[relevant_columns]
 
@@ -446,7 +443,7 @@ data["Sun Exposure"] = data["Exposure"].apply(determine_exposure)
 
 
 data.drop(["Height","Bloom Color","Exposure","Soil Moisture Preference"],axis=1,inplace=True)
-write_df_to_sheet("All_Scraped_Data_Cleaned",f"{RESOURCE}_{STATE}",data)
+write_df_to_sheet("All_Scraped_Data_Cleaned_Full",RESOURCE,data)
 
 time.sleep(15)
 
@@ -456,7 +453,7 @@ RESOURCE = "USDAPlants"
 
 
 
-data = get_sheet_data("All_Scraped_Data_Original",f"{RESOURCE}_{STATE}")
+data = get_sheet_data("All_Scraped_Data_Original_Full",RESOURCE)
 relevant_columns = ["index","Height, Mature (feet)","Flower Color"] #TODO:Change index
 data= data[relevant_columns]
 
@@ -491,7 +488,7 @@ data.drop("Height, Mature (feet)",axis=1,inplace=True)
 data.columns = ["index","Flower Color","Height (feet)"]
 
 
-write_df_to_sheet("All_Scraped_Data_Cleaned",f"{RESOURCE}_{STATE}",data)
+write_df_to_sheet("All_Scraped_Data_Cleaned_Full",RESOURCE,data)
 
 
 
@@ -509,7 +506,7 @@ RESOURCE = "Wildflower"
 
 
 
-data = get_sheet_data("All_Scraped_Data_Original",f"{RESOURCE}_{STATE}")
+data = get_sheet_data("All_Scraped_Data_Original_Full",RESOURCE)
 relevant_columns = ["index","Bloom Time","Bloom Color", "Soil Moisture","Light Requirement","Size Notes"]
 data= data[relevant_columns]
 
@@ -589,7 +586,7 @@ data.rename({"Light Requirement":"Sun Exposure"},axis=1,inplace=True)
 data.drop(["Bloom Time","Bloom Color","Size Notes"],axis=1,inplace=True)
 
 
-write_df_to_sheet("All_Scraped_Data_Cleaned",f"{RESOURCE}_{STATE}",data)
+write_df_to_sheet("All_Scraped_Data_Cleaned_Full",RESOURCE,data)
 
 
 
