@@ -9,6 +9,9 @@ from Helpers import get_sheet_data,write_df_to_sheet
 data = get_sheet_data("ONLINE_Full","ONLINE_Full")
 data.rename({"USDA":"USDA Symbol"},axis=1,inplace=True)
 
+
+
+
 metadata = get_sheet_data("ERAFull","ERAFull")
 
 
@@ -17,6 +20,8 @@ online_agg = data.groupby("USDA Symbol").agg({"Root":[f,len],"Web":f})
 
 online_agg.reset_index(inplace=True)
 online_agg.columns = ["USDA Symbol","Root","Count","Web"]
+online_agg["Root"] = online_agg["Root"].apply(lambda x: ", ".join(sorted(x.split(", "))).strip())
+online_agg["Web"] = online_agg["Web"].apply(lambda x: ", ".join(sorted(x.split(", "))).strip())
 
 metadata = metadata[["USDA Symbol","Scientific Name","Common Name"]]
 metadata.columns = ["USDA Symbol","Scientific Name","Common Name"]
