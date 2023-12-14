@@ -2,4 +2,7 @@ RPC_Nursery/service_account.json
 Enhanced_ERA/Scripts/service_account.json
 **/__pycache__/
 **/token_drive_v3.pickle
-/Enhanced_ERA/GPT-Enhancement
+/Enhanced_ERA/GPT-Enhancement/Data
+/Enhanced_ERA/GPT-Enhancement/Testing
+/Enhanced_ERA/GPT-Enhancement/.env
+
