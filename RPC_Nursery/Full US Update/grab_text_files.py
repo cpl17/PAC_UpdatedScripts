@@ -39,7 +39,7 @@ while nextPageToken:
 file_ids = [file['id'] for file in files]
 file_names = [file['name'] for file in files]
 
-for file_id,file_name in zip(file_ids, file_names):
+for file_id,file_name in zip(file_ids, file_names):    
     print(file_name)
     # request = service.files().get_media(fileId=file_id)
 
