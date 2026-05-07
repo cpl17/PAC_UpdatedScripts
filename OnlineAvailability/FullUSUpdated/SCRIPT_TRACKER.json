@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "project": "Full US Updated",
+    "snapshot_convention": "Each snapshot uses a unique id and matching timestamp: id = YYYY-MM-DDTHHMMSS_short_slug (24h clock, no colons in id); timestamp = same instant as ISO-8601 YYYY-MM-DDTHH:MM:SS (sortable, distinguishes multiple updates on one day).",
+    "quick_commands": [
+      "Activate venv: source \"../../.venv/bin/activate\"",
+      "Install missing dep: python -m pip install lxml",
+      "Run single script: python \"ScriptName.py\""
+    ]
+  },
+  "snapshots": [
+    {
+      "id": "2026-05-07T000000_migrate_from_txt",
+      "timestamp": "2026-05-07T00:00:00",
+      "source": "manual",
+      "note": "Initial snapshot migrated from SCRIPT_TRACKER_TODO.txt (pre-JSON). Append new snapshots when scripts run.",
+      "scripts": [
+        {
+          "script": "AmandasNursery.py",
+          "status": "SUCCESS",
+          "current_issue": "Wix DOM parsing updated (`a[data-hook=product-item-container]`, `[data-hook=product-item-name]`, aria-label + legacy h3 fallbacks). Debug run `20260507_190212`: ~164 raw products scraped (pages 1–4), 117 ERA matches in `*_final_*.csv`.",
+          "next_action": "Re-run after site changes; optional: cross-check sheet write when `WRITE_TO_SHEET=True`"
+        },
+        {
+          "script": "ErnstSeed.py",
+          "status": "FAIL",
+          "current_issue": "Selenium now launches on Mac, but timed out during page navigation (`driver.get` read timeout)",
+          "next_action": "Add retry/waits and rerun"
+        },
+        {
+          "script": "EverwildeFarms.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed for Mac, but not re-tested after updates",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "Helpers.py",
+          "status": "SUCCESS",
+          "current_issue": "Service account format issue resolved with valid service-account JSON",
+          "next_action": "Keep credential file in expected location"
+        },
+        {
+          "script": "Izel.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed for Mac, not re-tested yet",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "Join_CSVs.py",
+          "status": "UNKNOWN",
+          "current_issue": "Not part of scraper diagnostics run yet",
+          "next_action": "Run when aggregation step is needed"
+        },
+        {
+          "script": "MidAtlantic.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed for Mac, not re-tested yet",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "Online_Agg.py",
+          "status": "UNKNOWN",
+          "current_issue": "Not part of scraper diagnostics run yet",
+          "next_action": "Run when aggregation step is needed"
+        },
+        {
+          "script": "PlantMore.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed for Mac, not re-tested yet",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "PrairieMoon.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed; missing DELAY fixed; not re-tested yet",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "SouthernSeeds.py",
+          "status": "SUCCESS",
+          "current_issue": "Ran successfully in current pass",
+          "next_action": "Keep as baseline"
+        },
+        {
+          "script": "ToadShade.py",
+          "status": "FAIL",
+          "current_issue": "Missing dependency `lxml` required by `pd.read_html`",
+          "next_action": "Install `lxml`, rerun"
+        },
+        {
+          "script": "WesternNative.py",
+          "status": "SUCCESS",
+          "current_issue": "Ran successfully (only parser warning)",
+          "next_action": "Optional: set explicit BeautifulSoup parser"
+        }
+      ]
+    },
+    {
+      "id": "2026-05-07T213000_ernstseed_refactor",
+      "timestamp": "2026-05-07T21:30:00",
+      "source": "manual",
+      "note": "ErnstSeed.py refactored off Selenium; listing HTML via requests; ERA reference from Google Sheets only (matches SCRIPT_TRACKER_TODO.txt sync).",
+      "scripts": [
+        {
+          "script": "AmandasNursery.py",
+          "status": "SUCCESS",
+          "current_issue": "None",
+          "next_action": "Re-run after Wix markup changes"
+        },
+        {
+          "script": "ErnstSeed.py",
+          "status": "SUCCESS",
+          "current_issue": "Refactored to requests + BeautifulSoup. Elementor loop tiles (`div[data-elementor-type=loop-item].product`), product link `a[href*=/product/]`, botanical line `span.elementor-heading-title`, WordPress pagination `/seed-finder-tool/page/n/?_product_type=individual-species`, max page from `.e-load-more-anchor[data-max-page]`. ERA via `get_sheet_data(ERAFull, ERAFull)` only. Cultivar suffix after comma stripped before exact ERA Scientific Name match.",
+          "next_action": "Re-run after Ernst listing or pagination markup changes"
+        },
+        {
+          "script": "EverwildeFarms.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed for Mac, but not re-tested after updates",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "Helpers.py",
+          "status": "SUCCESS",
+          "current_issue": "Service account format issue resolved with valid service-account JSON",
+          "next_action": "Keep credential file in expected location"
+        },
+        {
+          "script": "Izel.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed for Mac, not re-tested yet",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "Join_CSVs.py",
+          "status": "UNKNOWN",
+          "current_issue": "Not part of scraper diagnostics run yet",
+          "next_action": "Run when aggregation step is needed"
+        },
+        {
+          "script": "MidAtlantic.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed for Mac, not re-tested yet",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "Online_Agg.py",
+          "status": "UNKNOWN",
+          "current_issue": "Not part of scraper diagnostics run yet",
+          "next_action": "Run when aggregation step is needed"
+        },
+        {
+          "script": "PlantMore.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed for Mac, not re-tested yet",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "PrairieMoon.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed; missing DELAY fixed; not re-tested yet",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "SouthernSeeds.py",
+          "status": "SUCCESS",
+          "current_issue": "Ran successfully in current pass",
+          "next_action": "Keep as baseline"
+        },
+        {
+          "script": "ToadShade.py",
+          "status": "FAIL",
+          "current_issue": "Missing dependency `lxml` required by `pd.read_html`",
+          "next_action": "Install `lxml`, rerun"
+        },
+        {
+          "script": "WesternNative.py",
+          "status": "SUCCESS",
+          "current_issue": "Ran successfully (only parser warning)",
+          "next_action": "Optional: set explicit BeautifulSoup parser"
+        }
+      ]
+    }
+  ]
+}

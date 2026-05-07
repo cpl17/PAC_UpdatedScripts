@@ -1,0 +1,27 @@
+Full US Updated - Script Tracker
+Last updated: 2026-05-07T21:30:00
+
+Legend: SUCCESS = ran end-to-end | FAIL = script crashed | BLOCKED = not re-tested | UNKNOWN = not tested
+
+Script | Status | Current Issue
+
+AmandasNursery.py | SUCCESS | None
+ErnstSeed.py | SUCCESS | Refactored to `requests` + BeautifulSoup (no Selenium). Elementor tiles `div[data-elementor-type=loop-item].product`; URL `a[href*=/product/]`; botanical `span.elementor-heading-title`; WP pagination `/seed-finder-tool/page/n/?_product_type=individual-species`; max page from `.e-load-more-anchor`; ERA from Google Sheets `ERAFull` only; cultivar comma stripped before ERA match.
+EverwildeFarms.py | BLOCKED | Windows driver path removed for Mac, but not re-tested after updates
+Helpers.py | SUCCESS | Service account format issue resolved with valid service-account JSON
+Izel.py | BLOCKED | Windows driver path removed for Mac, not re-tested yet
+Join_CSVs.py | UNKNOWN | Not part of scraper diagnostics run yet
+MidAtlantic.py | BLOCKED | Windows driver path removed for Mac, not re-tested yet
+Online_Agg.py | UNKNOWN | Not part of scraper diagnostics run yet
+PlantMore.py | BLOCKED | Windows driver path removed for Mac, not re-tested yet
+PrairieMoon.py | BLOCKED | Windows driver path removed; missing DELAY fixed; not re-tested yet
+SouthernSeeds.py | SUCCESS | Ran successfully in current pass
+ToadShade.py | FAIL | Missing dependency `lxml` required by `pd.read_html`
+WesternNative.py | SUCCESS | Ran successfully (only parser warning)
+
+Quick commands:
+- Activate venv: source "../../.venv/bin/activate"
+- Install missing dep: python -m pip install lxml
+- Run single script: python "ScriptName.py"
+
+Detailed run history: SCRIPT_TRACKER.json (append a snapshot per change; use id `YYYY-MM-DDTHHMMSS_slug` and the same instant in `timestamp`).

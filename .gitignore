@@ -8,3 +8,12 @@ Enhanced_ERA/Scripts/service_account.json
 /RPC_Nursery/Full US Update/Temp/
 /Enhanced_ERA/GPT-Enhancement/Output
 /RPC_Nursery/Full US Update/Data
+
+# OnlineAvailability / FullUSUpdated
+OnlineAvailability/.venv/
+OnlineAvailability/.cache/
+OnlineAvailability/.config/
+OnlineAvailability/FullUSUpdated/Scripts/service_account.json
+OnlineAvailability/FullUSUpdated/DebugOutput/
+OnlineAvailability/FullUSUpdated/logs/
+**/.DS_Store

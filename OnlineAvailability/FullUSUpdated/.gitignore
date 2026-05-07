@@ -1,0 +1,8 @@
+# Credentials (never commit)
+Scripts/service_account.json
+
+# Scrape artifacts
+DebugOutput/
+logs/
+__pycache__/
+*.pyc
