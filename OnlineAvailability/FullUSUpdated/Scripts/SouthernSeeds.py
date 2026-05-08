@@ -1,19 +1,7 @@
 import pandas as pd
-import time
 from datetime import datetime
 from pathlib import Path
 import argparse
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-
-import re
-
 import requests
 from bs4 import BeautifulSoup
 
@@ -34,60 +22,79 @@ SCRIPT_NAME = "SouthernSeeds"
 DEBUG_DIR = Path(__file__).resolve().parents[1] / "DebugOutput" / SCRIPT_NAME
 DEBUG_DIR.mkdir(parents=True, exist_ok=True)
 
-def clean_text(full_text):
-        
-    pattern = r'\((.*?)\)'
-    match = re.search(pattern, full_text)
-
-
-    # Checking if a match is found
-    if match:
-        return match.group(1)
-    else:
-        return 
+def extract_scientific_from_href(href: str, scientific_slug_to_name: dict):
+    if not href:
+        return None
+    href_lower = href.lower()
+    for slug, sci_name in scientific_slug_to_name.items():
+        if slug in href_lower:
+            return sci_name
+    return None
 
 era = get_sheet_data("ERAFull","ERAFull")
 scientific_names = era["Scientific Name"].to_list()
 scientific_name_set = set(scientific_names)
+scientific_slug_to_name = {
+    name.lower().replace(" ", "-"): name
+    for name in scientific_name_set
+}
 
 
 
 matches_list = []
 match_urls_list = []
 all_names_seen = []
+all_links_seen = []
 
 
 
-for page_num in range(1,16):
+for page_num in range(1,50):
 
     url = f"https://southernseedexchange.com/collections/flower-seeds?page={page_num}"
 
-    response = requests.get(url)
+    response = requests.get(url, timeout=60)
+    response.raise_for_status()
 
     # Parse the HTML content
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    # Extract links and names using CSS selectors (links not working)
-    # all_links = [link['href'] for link in soup.select('a.product-link')]
-    all_names = [clean_text(name.text) for name in soup.select('.product-block__title')]
-    all_names_seen.extend([name for name in all_names if name])
+    product_cards = soup.select(".product-block[data-product-id]")
+    if not product_cards:
+        if DEBUG:
+            print(f"[DEBUG] Page {page_num}: no product cards found, stopping pagination.")
+        break
+
+    page_matches = 0
+    page_raw = 0
+    for card in product_cards:
+        link_el = card.select_one("a.product-link[href*='/products/']")
+        title_el = card.select_one(".product-block__title")
+        if not link_el:
+            continue
+        href = link_el.get("href", "").strip()
+        if not href:
+            continue
+        if href.startswith("/"):
+            href = f"https://southernseedexchange.com{href}"
+        page_raw += 1
+        all_links_seen.append(href)
+        if title_el:
+            all_names_seen.append(title_el.get_text(" ", strip=True))
+
+        scientific_name = extract_scientific_from_href(href, scientific_slug_to_name)
+        if scientific_name and scientific_name in scientific_name_set:
+            matches_list.append(scientific_name)
+            match_urls_list.append(href)
+            page_matches += 1
+
     if DEBUG:
-        print(f"[DEBUG] Page {page_num}: parsed names={len(all_names)}")
-
-    # for link,name in list(zip(all_links,all_names)):
-    #     if name in scientific_names:
-    #         match_urls_list.append(link)
-    #         matches_list.append(name)
-
-    for name in all_names:
-        if name in scientific_name_set:
-            matches_list.append(name)
+        print(f"[DEBUG] Page {page_num}: parsed products={page_raw}, page matches={page_matches}")
 
 
 
 era = era[["USDA Symbol","Scientific Name"]]
-matches_df = pd.DataFrame({"Scientific Name":matches_list,"Root":["SouthernSeedExchange.com"]*(len(matches_list)),"URL":["southernseedexchange.com/collections/flower-seeds"]*(len(matches_list))})
-raw_df = pd.DataFrame({"Scientific Name": all_names_seen})
+matches_df = pd.DataFrame({"Scientific Name":matches_list,"Root":["SouthernSeedExchange.com"]*(len(matches_list)),"URL":match_urls_list})
+raw_df = pd.DataFrame({"Listing Title": all_names_seen, "URL": all_links_seen})
 
 #Matches Df
 final = pd.merge(matches_df,era,on="Scientific Name",how="left")
