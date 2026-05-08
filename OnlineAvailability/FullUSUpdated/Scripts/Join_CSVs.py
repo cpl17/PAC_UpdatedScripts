@@ -1,11 +1,10 @@
 import pandas as pd
 from Helpers import get_sheet_data,write_df_to_sheet
 import gspread
-import time
 
 #Availability
 
-gc = gspread.service_account()
+gc = gspread.service_account(filename="service_account.json")
 sh = gc.open("All_Online_Scraped_Data_Full")
 worksheet_list = sh.worksheets()
 
