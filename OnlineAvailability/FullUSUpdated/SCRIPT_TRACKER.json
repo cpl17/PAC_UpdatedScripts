@@ -18,7 +18,7 @@
         {
           "script": "AmandasNursery.py",
           "status": "SUCCESS",
-          "current_issue": "Wix DOM parsing updated (`a[data-hook=product-item-container]`, `[data-hook=product-item-name]`, aria-label + legacy h3 fallbacks). Debug run `20260507_190212`: ~164 raw products scraped (pages 1–4), 117 ERA matches in `*_final_*.csv`.",
+          "current_issue": "Wix DOM parsing updated (`a[data-hook=product-item-container]`, `[data-hook=product-item-name]`, aria-label + legacy h3 fallbacks). Debug run `20260507_190212`: ~164 raw products scraped (pages 1\u20134), 117 ERA matches in `*_final_*.csv`.",
           "next_action": "Re-run after site changes; optional: cross-check sheet write when `WRITE_TO_SHEET=True`"
         },
         {
@@ -118,6 +118,92 @@
           "status": "BLOCKED",
           "current_issue": "Windows driver path removed for Mac, but not re-tested after updates",
           "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "Helpers.py",
+          "status": "SUCCESS",
+          "current_issue": "Service account format issue resolved with valid service-account JSON",
+          "next_action": "Keep credential file in expected location"
+        },
+        {
+          "script": "Izel.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed for Mac, not re-tested yet",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "Join_CSVs.py",
+          "status": "UNKNOWN",
+          "current_issue": "Not part of scraper diagnostics run yet",
+          "next_action": "Run when aggregation step is needed"
+        },
+        {
+          "script": "MidAtlantic.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed for Mac, not re-tested yet",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "Online_Agg.py",
+          "status": "UNKNOWN",
+          "current_issue": "Not part of scraper diagnostics run yet",
+          "next_action": "Run when aggregation step is needed"
+        },
+        {
+          "script": "PlantMore.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed for Mac, not re-tested yet",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "PrairieMoon.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed; missing DELAY fixed; not re-tested yet",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "SouthernSeeds.py",
+          "status": "SUCCESS",
+          "current_issue": "Ran successfully in current pass",
+          "next_action": "Keep as baseline"
+        },
+        {
+          "script": "ToadShade.py",
+          "status": "FAIL",
+          "current_issue": "Missing dependency `lxml` required by `pd.read_html`",
+          "next_action": "Install `lxml`, rerun"
+        },
+        {
+          "script": "WesternNative.py",
+          "status": "SUCCESS",
+          "current_issue": "Ran successfully (only parser warning)",
+          "next_action": "Optional: set explicit BeautifulSoup parser"
+        }
+      ]
+    },
+    {
+      "id": "2026-05-08T132300_everwilde_scroll_restore",
+      "timestamp": "2026-05-08T13:23:00",
+      "source": "manual",
+      "note": "EverwildeFarms confirmed to require scroll-loaded content; restored Selenium scrolling and kept Google Sheets ERA reference.",
+      "scripts": [
+        {
+          "script": "AmandasNursery.py",
+          "status": "SUCCESS",
+          "current_issue": "None",
+          "next_action": "Re-run after Wix markup changes"
+        },
+        {
+          "script": "ErnstSeed.py",
+          "status": "SUCCESS",
+          "current_issue": "Refactored to requests + BeautifulSoup with Elementor selectors and /page/n/ pagination; ERA from Google Sheets only.",
+          "next_action": "Re-run after Ernst listing/pagination markup changes"
+        },
+        {
+          "script": "EverwildeFarms.py",
+          "status": "SUCCESS",
+          "current_issue": "Restored Selenium scrolling for dynamic product load; extracts from `ul li h2 a` with scientific name in `span.type`. Local run: raw=508, matches pre-dedupe=256, final=231.",
+          "next_action": "Keep Selenium scroll path; monitor for window/session flakiness on first run"
         },
         {
           "script": "Helpers.py",

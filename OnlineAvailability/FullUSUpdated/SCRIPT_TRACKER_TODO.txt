@@ -1,5 +1,5 @@
 Full US Updated - Script Tracker
-Last updated: 2026-05-07T21:30:00
+Last updated: 2026-05-08T13:23:00
 
 Legend: SUCCESS = ran end-to-end | FAIL = script crashed | BLOCKED = not re-tested | UNKNOWN = not tested
 
@@ -7,7 +7,7 @@ Script | Status | Current Issue
 
 AmandasNursery.py | SUCCESS | None
 ErnstSeed.py | SUCCESS | Refactored to `requests` + BeautifulSoup (no Selenium). Elementor tiles `div[data-elementor-type=loop-item].product`; URL `a[href*=/product/]`; botanical `span.elementor-heading-title`; WP pagination `/seed-finder-tool/page/n/?_product_type=individual-species`; max page from `.e-load-more-anchor`; ERA from Google Sheets `ERAFull` only; cultivar comma stripped before ERA match.
-EverwildeFarms.py | BLOCKED | Windows driver path removed for Mac, but not re-tested after updates
+EverwildeFarms.py | SUCCESS | Restored Selenium scrolling (dynamic load) with robust extraction (`ul li h2 a` + `span.type`). Local run: raw=508, matches pre-dedupe=256, final=231.
 Helpers.py | SUCCESS | Service account format issue resolved with valid service-account JSON
 Izel.py | BLOCKED | Windows driver path removed for Mac, not re-tested yet
 Join_CSVs.py | UNKNOWN | Not part of scraper diagnostics run yet

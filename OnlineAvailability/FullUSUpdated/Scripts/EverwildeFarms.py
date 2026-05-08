@@ -5,16 +5,17 @@ from pathlib import Path
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 DEBUG = True
 WRITE_TO_SHEET = True
 SCRIPT_NAME = "EverwildeFarms"
 DEBUG_DIR = Path(__file__).resolve().parents[1] / "DebugOutput" / SCRIPT_NAME
 DEBUG_DIR.mkdir(parents=True, exist_ok=True)
+SCROLL_PAUSE_SECONDS = 2
+MAX_IDLE_SCROLLS = 5
 
 options = Options()
 options.add_argument("start-maximized")
@@ -28,8 +29,6 @@ era = get_sheet_data("ERAFull","ERAFull")
 scientific_names = era["Scientific Name"].to_list()
 scientific_name_set = set(scientific_names)
 
-driver = webdriver.Chrome(options=options)
-
 
 matches_list = []
 match_urls_list = []
@@ -37,41 +36,56 @@ match_urls_list = []
 
 home_page = "https://www.everwilde.com/Southeast-Wildflower-Seeds.html"
 
+driver = webdriver.Chrome(options=options)
 driver.get(home_page)
 
+WebDriverWait(driver, 30).until(
+    EC.presence_of_element_located((By.CSS_SELECTOR, "ul li h2 a"))
+)
 
-# #Scroll to the bottom of the page
-last_height = driver.execute_script("return document.body.scrollHeight")
-
-while True:
-
-    driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
-    time.sleep(3)
-
-    new_height = driver.execute_script("return document.body.scrollHeight")
-    if new_height == last_height:
-        break
-
+# Scroll until product count stabilizes across several passes.
+idle_scrolls = 0
+last_count = 0
+while idle_scrolls < MAX_IDLE_SCROLLS:
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(SCROLL_PAUSE_SECONDS)
+    current_count = len(driver.find_elements(By.CSS_SELECTOR, "ul li h2 a"))
+    if current_count > last_count:
+        last_count = current_count
+        idle_scrolls = 0
     else:
-        last_height = new_height
+        idle_scrolls += 1
 
+link_elements = driver.find_elements(By.CSS_SELECTOR, "ul li h2 a")
+links = []
+names = []
+skipped_items = 0
+for link_element in link_elements:
+    href = link_element.get_attribute("href")
+    type_elements = link_element.find_elements(By.CSS_SELECTOR, "span.type")
+    type_text = type_elements[0].text.strip() if type_elements else ""
+    if not href or not type_text:
+        skipped_items += 1
+        continue
+    links.append(href)
+    names.append(type_text)
 
-link_elements = driver.find_elements(By.CSS_SELECTOR,"ul li h2 a")
-names = [link_element.find_element(By.CLASS_NAME,"type").text for link_element in link_elements]
+driver.close()
 
 if DEBUG:
     print(f"[DEBUG] Parsed link elements={len(link_elements)}")
+    print(f"[DEBUG] Parsed names={len(names)}, skipped={skipped_items}")
     print(f"[DEBUG] Sample names={names[:5]}")
 
-for link,name in list(zip(link_elements,names)):
+for link,name in list(zip(links,names)):
     if name in scientific_name_set:
-        match_urls_list.append(link.get_attribute("href"))
+        match_urls_list.append(link)
         matches_list.append(name)
 
 
 era = era[["USDA Symbol","Scientific Name"]]
 matches_df = pd.DataFrame({"Scientific Name":matches_list,"Root":["Everwilde.com"]*(len(matches_list)),"URL": match_urls_list})
-raw_df = pd.DataFrame({"Scientific Name": names, "URL": [link.get_attribute("href") for link in link_elements]})
+raw_df = pd.DataFrame({"Scientific Name": names, "URL": links})
 
 #Matches Df
 final = pd.merge(matches_df,era,on="Scientific Name",how="left")
