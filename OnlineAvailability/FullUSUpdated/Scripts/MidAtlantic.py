@@ -1,14 +1,8 @@
 import pandas as pd
-import time
+import requests
+import html
 from datetime import datetime
 from pathlib import Path
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 
 DEBUG = True
 WRITE_TO_SHEET = True
@@ -16,9 +10,11 @@ SCRIPT_NAME = "MidAtlantic"
 DEBUG_DIR = Path(__file__).resolve().parents[1] / "DebugOutput" / SCRIPT_NAME
 DEBUG_DIR.mkdir(parents=True, exist_ok=True)
 
-options = Options()
-options.add_argument("start-maximized")
-options.add_experimental_option("detach", True)
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/json,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
 
 from Helpers import get_sheet_data,write_df_to_sheet
 
@@ -28,62 +24,83 @@ era = get_sheet_data("ERAFull","ERAFull")
 scientific_names = era["Scientific Name"].to_list()
 scientific_name_set = set(scientific_names)
 
-driver = webdriver.Chrome(options=options)
-
-
 matches_list = []
 match_urls_list = []
 all_names = []
+all_links = []
 
 
-home_page = "https://midatlanticnatives.com/product-category/bare-root-native-plants/"
+BASE_API = "https://midatlanticnatives.com/wp-json/wp/v2"
+CATEGORY_SLUG = "bare-root-native-plants"
+PER_PAGE = 100
 
-driver.get(home_page)
+def get_category_id(slug: str) -> int:
+    response = requests.get(
+        f"{BASE_API}/product_cat",
+        params={"slug": slug, "per_page": 100},
+        headers=headers,
+        timeout=60,
+    )
+    response.raise_for_status()
+    categories = response.json()
+    if not categories:
+        raise RuntimeError(f"Could not find product category slug '{slug}'")
+    return categories[0]["id"]
 
 
-#Scroll to the bottom of the page
-last_height = driver.execute_script("return document.body.scrollHeight")
+def normalize_scientific_name(title_text: str) -> str:
+    text = html.unescape((title_text or "").strip())
+    # Most product titles are "Genus species, Common name ...".
+    before_comma = text.split(",", 1)[0].strip()
+    parts = before_comma.split()
+    if len(parts) >= 2:
+        return f"{parts[0]} {parts[1]}"
+    return before_comma
+
+
+category_id = get_category_id(CATEGORY_SLUG)
+page_num = 1
 
 while True:
-
-    driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
-    time.sleep(7)
-
-    new_height = driver.execute_script("return document.body.scrollHeight")
-    if new_height == last_height:
+    response = requests.get(
+        f"{BASE_API}/product",
+        params={"product_cat": category_id, "per_page": PER_PAGE, "page": page_num},
+        headers=headers,
+        timeout=60,
+    )
+    # WP REST returns 400 for out-of-range page.
+    if response.status_code == 400:
+        if DEBUG:
+            print(f"[DEBUG] Page {page_num}: no more results (status 400), stopping.")
+        break
+    response.raise_for_status()
+    products = response.json()
+    if not products:
+        if DEBUG:
+            print(f"[DEBUG] Page {page_num}: empty product list, stopping.")
         break
 
-    else:
-        last_height = new_height
+    page_names = []
+    page_links = []
+    for p in products:
+        title_text = p.get("title", {}).get("rendered", "")
+        link = p.get("link", "")
+        name = normalize_scientific_name(title_text)
+        if not name or not link:
+            continue
+        page_names.append(name)
+        page_links.append(link)
+        all_names.append(name)
+        all_links.append(link)
+        if name in scientific_name_set:
+            matches_list.append(name)
+            match_urls_list.append(link)
 
+    if DEBUG:
+        print(f"[DEBUG] Page {page_num}: products={len(products)}, parsed={len(page_names)}")
+        print(f"[DEBUG] Page {page_num}: sample names={page_names[:5]}")
 
-#Find link elements for each plant, use a cleaned version of the link text (Full inventory text)
-#to create a list of all the plants on the page. 
-link_elements = driver.find_elements(By.CSS_SELECTOR,"div h2 a")
-all_links = [link.get_attribute("href") for link in link_elements]
-
-all_names_text = [element.text for element in link_elements]
-all_names = [" ".join(x.split(" ")[:2]).strip(",") for x in all_names_text]
-if DEBUG:
-    print(f"[DEBUG] Parsed links={len(all_links)}")
-    print(f"[DEBUG] Sample parsed names={all_names[:5]}")
-
-
-#Find Matches. All relevant links have a child italize tag that holds the name 
-for link in link_elements:
-    try:
-        name = " ".join((link.text).split(" ")[:2]).strip(",")
-
-    except:
-        continue
-
-    if name in scientific_name_set:
-        matches_list.append(name)
-        match_urls_list.append(link.get_attribute("href"))
-
-
-
-driver.close()
+    page_num += 1
 
 
 era = era[["USDA Symbol","Scientific Name"]]

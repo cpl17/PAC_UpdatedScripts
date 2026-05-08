@@ -352,6 +352,92 @@
           "next_action": "Optional: set explicit BeautifulSoup parser"
         }
       ]
+    },
+    {
+      "id": "2026-05-08T140500_midatlantic_wp_api_refactor",
+      "timestamp": "2026-05-08T14:05:00",
+      "source": "manual",
+      "note": "MidAtlantic moved from Selenium scrolling to WordPress/Woo product API flow for stable pagination and parsing.",
+      "scripts": [
+        {
+          "script": "AmandasNursery.py",
+          "status": "SUCCESS",
+          "current_issue": "None",
+          "next_action": "Re-run after Wix markup changes"
+        },
+        {
+          "script": "ErnstSeed.py",
+          "status": "SUCCESS",
+          "current_issue": "Refactored to requests + BeautifulSoup with Elementor selectors and /page/n/ pagination; ERA from Google Sheets only.",
+          "next_action": "Re-run after Ernst listing/pagination markup changes"
+        },
+        {
+          "script": "EverwildeFarms.py",
+          "status": "SUCCESS",
+          "current_issue": "Selenium scrolling retained for dynamic load, with robust extraction (`ul li h2 a` + `span.type`). Local run: raw=508, matches pre-dedupe=256, final=231.",
+          "next_action": "Monitor for intermittent no-such-window; rerun if first attempt fails"
+        },
+        {
+          "script": "Helpers.py",
+          "status": "SUCCESS",
+          "current_issue": "Service account format issue resolved with valid service-account JSON",
+          "next_action": "Keep credential file in expected location"
+        },
+        {
+          "script": "Izel.py",
+          "status": "SUCCESS",
+          "current_issue": "Refactored to requests + BeautifulSoup pagination (`?p=n&product_list_limit=128`) with stop on 404/no links. Debug run: raw=509, matches pre-dedupe=307, final=307. Sheet write intentionally disabled (`WRITE_TO_SHEET=False`).",
+          "next_action": "When debugging is done, re-enable sheet write and confirm tab exists before write"
+        },
+        {
+          "script": "Join_CSVs.py",
+          "status": "UNKNOWN",
+          "current_issue": "Not part of scraper diagnostics run yet",
+          "next_action": "Run when aggregation step is needed"
+        },
+        {
+          "script": "MidAtlantic.py",
+          "status": "SUCCESS",
+          "current_issue": "Refactored to WordPress API (`/wp-json/wp/v2/product`) using category `bare-root-native-plants` and page loop until out-of-range status 400. Local run: raw=50, matches pre-dedupe=49, final=34.",
+          "next_action": "Monitor category slug/API stability; adjust normalization if title format changes"
+        },
+        {
+          "script": "Online_Agg.py",
+          "status": "UNKNOWN",
+          "current_issue": "Not part of scraper diagnostics run yet",
+          "next_action": "Run when aggregation step is needed"
+        },
+        {
+          "script": "PlantMore.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed for Mac, not re-tested yet",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "PrairieMoon.py",
+          "status": "BLOCKED",
+          "current_issue": "Windows driver path removed; missing DELAY fixed; not re-tested yet",
+          "next_action": "Run and capture first failure/success"
+        },
+        {
+          "script": "SouthernSeeds.py",
+          "status": "SUCCESS",
+          "current_issue": "Ran successfully in current pass",
+          "next_action": "Keep as baseline"
+        },
+        {
+          "script": "ToadShade.py",
+          "status": "FAIL",
+          "current_issue": "Missing dependency `lxml` required by `pd.read_html`",
+          "next_action": "Install `lxml`, rerun"
+        },
+        {
+          "script": "WesternNative.py",
+          "status": "SUCCESS",
+          "current_issue": "Ran successfully (only parser warning)",
+          "next_action": "Optional: set explicit BeautifulSoup parser"
+        }
+      ]
     }
   ]
 }
