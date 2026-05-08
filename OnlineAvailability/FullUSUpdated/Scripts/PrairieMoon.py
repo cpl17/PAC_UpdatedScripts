@@ -2,6 +2,7 @@ import pandas as pd
 import time
 from datetime import datetime
 from pathlib import Path
+import argparse
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -13,8 +14,16 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from Helpers import get_sheet_data,write_df_to_sheet
 
-DEBUG = True
-WRITE_TO_SHEET = True
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run PrairieMoon scraper.")
+    parser.add_argument("--debug", dest="debug", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--write-to-sheet", dest="write_to_sheet", action=argparse.BooleanOptionalAction, default=False)
+    return parser.parse_args()
+
+
+_ARGS = parse_args()
+DEBUG = _ARGS.debug
+WRITE_TO_SHEET = _ARGS.write_to_sheet
 SCRIPT_NAME = "PrairieMoon"
 DEBUG_DIR = Path(__file__).resolve().parents[1] / "DebugOutput" / SCRIPT_NAME
 DEBUG_DIR.mkdir(parents=True, exist_ok=True)
