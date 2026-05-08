@@ -107,7 +107,7 @@ if DEBUG:
     print(f"[DEBUG] Wrote debug CSV snapshots to {DEBUG_DIR}")
 
 if WRITE_TO_SHEET:
-    write_df_to_sheet("All_Online_Scraped_Data","PlantMoreNatives",final)
+    write_df_to_sheet("All_Online_Scraped_Data_Full","PlantMoreNatives",final)
 
 #Full Inventory 
 # full_inventory_df = pd.DataFrame({"Scientific Name":all_names,"Root":["PlantMoreNatives.com"]*(len(all_names)),"URL":all_links})

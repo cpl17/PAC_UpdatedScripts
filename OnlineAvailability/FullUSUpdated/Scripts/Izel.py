@@ -103,9 +103,9 @@ if WRITE_TO_SHEET:
         print("[DEBUG] Skipping sheet write: final dataframe is empty.")
     else:
         try:
-            write_df_to_sheet("All_Online_Scraped_Data_Full", "Izel", final)
+            write_df_to_sheet("All_Online_Scraped_Data_Full", "IzelPlants", final)
         except Exception as exc:
-            print(f"[DEBUG] Sheet write failed for tab 'Izel': {exc}")
+            print(f"[DEBUG] Sheet write failed for tab 'IzelPlants': {exc}")
 
 #Full Inventory 
 # full_inventory_df = pd.DataFrame({"Scientific Name":all_names,"Root":["IzelPlants.com"]*(len(all_names)),"URL":all_links})
