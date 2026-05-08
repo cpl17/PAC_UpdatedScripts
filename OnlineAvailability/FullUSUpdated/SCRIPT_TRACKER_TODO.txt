@@ -1,5 +1,5 @@
 Full US Updated - Script Tracker
-Last updated: 2026-05-08T14:05:00
+Last updated: 2026-05-08T14:20:00
 
 Legend: SUCCESS = ran end-to-end | FAIL = script crashed | BLOCKED = not re-tested | UNKNOWN = not tested
 
@@ -11,7 +11,7 @@ EverwildeFarms.py | SUCCESS | Restored Selenium scrolling (dynamic load) with ro
 Helpers.py | SUCCESS | Service account format issue resolved with valid service-account JSON
 Izel.py | SUCCESS | Refactored to requests + BeautifulSoup pagination (`?p=n&product_list_limit=128`) with stop on 404/no links. Debug run: raw=509, matches pre-dedupe=307, final=307. Sheet write intentionally disabled for debugging (`WRITE_TO_SHEET=False`).
 Join_CSVs.py | UNKNOWN | Not part of scraper diagnostics run yet
-MidAtlantic.py | SUCCESS | Refactored to WordPress API (`/wp-json/wp/v2/product`) with category filter (`bare-root-native-plants`) and page loop until API out-of-range (400). Local run: raw=50, matches pre-dedupe=49, final=34.
+MidAtlantic.py | SUCCESS | Expanded WordPress API pull to multiple relevant product categories (bare-root + perennials + grasses + plug trays + wetland). Combined run: raw=241, matches pre-dedupe=214, final=92.
 Online_Agg.py | UNKNOWN | Not part of scraper diagnostics run yet
 PlantMore.py | BLOCKED | Windows driver path removed for Mac, not re-tested yet
 PrairieMoon.py | BLOCKED | Windows driver path removed; missing DELAY fixed; not re-tested yet

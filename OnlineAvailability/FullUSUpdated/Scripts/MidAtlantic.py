@@ -31,10 +31,20 @@ all_links = []
 
 
 BASE_API = "https://midatlanticnatives.com/wp-json/wp/v2"
-CATEGORY_SLUG = "bare-root-native-plants"
+TARGET_CATEGORY_SLUGS = [
+    "bare-root-native-plants",
+    "native-bare-root-ferns",
+    "native-bare-root-perennials-wilflowers",
+    "native-bare-root-shrubs",
+    "native-bare-root-trees",
+    "native-perennials-wildflowers",
+    "native-grasses-2",
+    "native-perennial-grass-wetland-plants-plug-trays",
+    "wetland-herbaceous-emergents",
+]
 PER_PAGE = 100
 
-def get_category_id(slug: str) -> int:
+def get_category_id(slug: str):
     response = requests.get(
         f"{BASE_API}/product_cat",
         params={"slug": slug, "per_page": 100},
@@ -44,7 +54,7 @@ def get_category_id(slug: str) -> int:
     response.raise_for_status()
     categories = response.json()
     if not categories:
-        raise RuntimeError(f"Could not find product category slug '{slug}'")
+        return None
     return categories[0]["id"]
 
 
@@ -58,49 +68,60 @@ def normalize_scientific_name(title_text: str) -> str:
     return before_comma
 
 
-category_id = get_category_id(CATEGORY_SLUG)
-page_num = 1
-
-while True:
-    response = requests.get(
-        f"{BASE_API}/product",
-        params={"product_cat": category_id, "per_page": PER_PAGE, "page": page_num},
-        headers=headers,
-        timeout=60,
-    )
-    # WP REST returns 400 for out-of-range page.
-    if response.status_code == 400:
+category_ids = []
+for slug in TARGET_CATEGORY_SLUGS:
+    cid = get_category_id(slug)
+    if cid is None:
         if DEBUG:
-            print(f"[DEBUG] Page {page_num}: no more results (status 400), stopping.")
-        break
-    response.raise_for_status()
-    products = response.json()
-    if not products:
+            print(f"[DEBUG] Category slug not found: {slug}")
+        continue
+    category_ids.append((slug, cid))
+
+if DEBUG:
+    print(f"[DEBUG] Using categories: {category_ids}")
+
+for slug, category_id in category_ids:
+    page_num = 1
+    while True:
+        response = requests.get(
+            f"{BASE_API}/product",
+            params={"product_cat": category_id, "per_page": PER_PAGE, "page": page_num},
+            headers=headers,
+            timeout=60,
+        )
+        # WP REST returns 400 for out-of-range page.
+        if response.status_code == 400:
+            if DEBUG:
+                print(f"[DEBUG] {slug} page {page_num}: no more results (status 400), stopping.")
+            break
+        response.raise_for_status()
+        products = response.json()
+        if not products:
+            if DEBUG:
+                print(f"[DEBUG] {slug} page {page_num}: empty product list, stopping.")
+            break
+
+        page_names = []
+        page_links = []
+        for p in products:
+            title_text = p.get("title", {}).get("rendered", "")
+            link = p.get("link", "")
+            name = normalize_scientific_name(title_text)
+            if not name or not link:
+                continue
+            page_names.append(name)
+            page_links.append(link)
+            all_names.append(name)
+            all_links.append(link)
+            if name in scientific_name_set:
+                matches_list.append(name)
+                match_urls_list.append(link)
+
         if DEBUG:
-            print(f"[DEBUG] Page {page_num}: empty product list, stopping.")
-        break
+            print(f"[DEBUG] {slug} page {page_num}: products={len(products)}, parsed={len(page_names)}")
+            print(f"[DEBUG] {slug} page {page_num}: sample names={page_names[:5]}")
 
-    page_names = []
-    page_links = []
-    for p in products:
-        title_text = p.get("title", {}).get("rendered", "")
-        link = p.get("link", "")
-        name = normalize_scientific_name(title_text)
-        if not name or not link:
-            continue
-        page_names.append(name)
-        page_links.append(link)
-        all_names.append(name)
-        all_links.append(link)
-        if name in scientific_name_set:
-            matches_list.append(name)
-            match_urls_list.append(link)
-
-    if DEBUG:
-        print(f"[DEBUG] Page {page_num}: products={len(products)}, parsed={len(page_names)}")
-        print(f"[DEBUG] Page {page_num}: sample names={page_names[:5]}")
-
-    page_num += 1
+        page_num += 1
 
 
 era = era[["USDA Symbol","Scientific Name"]]
