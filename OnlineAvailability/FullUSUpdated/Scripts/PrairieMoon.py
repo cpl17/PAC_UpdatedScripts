@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 import argparse
+from urllib.parse import urljoin
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -49,44 +50,72 @@ match_urls_list = []
 all_names = []
 all_links = []
 
-#Open Home Page, Get the number of pages
-home_page = "https://www.prairiemoon.com/seeds/"
-driver.get(home_page)
-WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.XPATH,'//*[@id="category-listing-wrapper"]/div[3]/div/span/div/a[8]')))
-num_pages = int(driver.find_element(By.XPATH,'//*[@id="category-listing-wrapper"]/div[3]/div/span/div/a[8]').text)
+base_page = "https://www.prairiemoon.com/seeds/"
+MAX_PAGES = 300
+RESULTS_PER_PAGE = 48
+last_signature = None
+repeat_signature_count = 0
 
-# for page_number in range(1,num_pages+1):
-for page_number in range(1,3):
+for page_number in range(1, MAX_PAGES + 1):
+    if page_number == 1:
+        page_url = f"{base_page}#/?resultsPerPage={RESULTS_PER_PAGE}"
+    else:
+        page_url = f"{base_page}#/?page={page_number}&resultsPerPage={RESULTS_PER_PAGE}"
 
-    if page_number != 1:
+    driver.get(page_url)
+    WebDriverWait(driver, 30).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, ".g-product-card"))
+    )
+    time.sleep(1)
 
-        page = f"https://www.prairiemoon.com/seeds/?page={page_number}"
-        driver.get(page)
-        WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.CSS_SELECTOR,"p.category-product-name a")))
-        time.sleep(5)
+    cards = driver.find_elements(By.CSS_SELECTOR, ".g-product-card")
+    page_names = []
+    page_links = []
+    skipped_items = 0
+    for card in cards:
+        link_elements = card.find_elements(By.CSS_SELECTOR, "a.g-product-card__link")
+        name_elements = card.find_elements(By.CSS_SELECTOR, ".g-product-card__brand")
+        if not link_elements or not name_elements:
+            skipped_items += 1
+            continue
+        href = (link_elements[0].get_attribute("href") or "").strip()
+        if href and href.startswith("/"):
+            href = urljoin(base_page, href)
+        name = name_elements[0].text.strip()
+        if not href or not name:
+            skipped_items += 1
+            continue
+        page_links.append(href)
+        page_names.append(name)
 
+    signature = tuple(page_links[:8])
+    if not page_links:
+        if DEBUG:
+            print(f"[DEBUG] Page {page_number}: no cards parsed, stopping.")
+        break
+    if signature == last_signature:
+        repeat_signature_count += 1
+    else:
+        repeat_signature_count = 0
+    last_signature = signature
+    # End only after repeated identical pages, avoids premature stop on transient load issues.
+    if repeat_signature_count >= 2:
+        if DEBUG:
+            print(f"[DEBUG] Page {page_number}: repeated signature detected multiple times, stopping pagination.")
+        break
 
-    link_elements = driver.find_elements(By.CSS_SELECTOR,"p.category-product-name a")
-    links = [link.get_attribute('href') for link in link_elements]
-    all_links.extend(links)
+    all_links.extend(page_links)
+    all_names.extend(page_names)
     if DEBUG:
-        print(f"[DEBUG] Page {page_number}: links={len(links)}")
+        print(f"[DEBUG] Page {page_number}: links={len(page_links)}, names={len(page_names)}, skipped={skipped_items}")
+        print(f"[DEBUG] Page {page_number}: sample names={page_names[:5]}")
 
-    for link in link_elements:
-
-        name_element = link.find_element(By.TAG_NAME,"span")
-        name = name_element.text
-        all_names.append(name)
-
-
+    for name, link in zip(page_names, page_links):
         if name in scientific_name_set:
             if DEBUG:
                 print(f"[DEBUG] Match on page {page_number}: {name}")
             matches_list.append(name)
-            match_urls_list.append(link.get_attribute("href"))
-
-    time.sleep(5)
-    
+            match_urls_list.append(link)
 
 
 driver.close()

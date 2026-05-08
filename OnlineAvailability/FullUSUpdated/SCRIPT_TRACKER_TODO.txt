@@ -1,5 +1,5 @@
 Full US Updated - Script Tracker
-Last updated: 2026-05-08T14:39:00
+Last updated: 2026-05-08T15:04:00
 
 Legend: SUCCESS = ran end-to-end | FAIL = script crashed | BLOCKED = not re-tested | UNKNOWN = not tested
 
@@ -14,7 +14,7 @@ Join_CSVs.py | UNKNOWN | Not part of scraper diagnostics run yet
 MidAtlantic.py | SUCCESS | Expanded WordPress API pull to multiple relevant product categories (bare-root + perennials + grasses + plug trays + wetland). Combined run: raw=241, matches pre-dedupe=214, final=92.
 Online_Agg.py | UNKNOWN | Not part of scraper diagnostics run yet
 PlantMore.py | SUCCESS | Refactored to requests + BeautifulSoup on BigCommerce `/plants/?page=n` with stop on 404/no cards. Debug run: raw=429, matches pre-dedupe=239, final=123. Sheet write failed due to missing worksheet tab `PlantMoreNatives` (data scrape itself succeeded).
-PrairieMoon.py | BLOCKED | Windows driver path removed; missing DELAY fixed; not re-tested yet
+PrairieMoon.py | SUCCESS | Updated Selenium scraping for JS-rendered cards (`.g-product-card`, scientific name from `.g-product-card__brand`) and hash pagination at 48/page. Debug run: pages 1-14, raw=668, matches pre-dedupe=541, final=541.
 SouthernSeeds.py | SUCCESS | Ran successfully in current pass
 ToadShade.py | FAIL | Missing dependency `lxml` required by `pd.read_html`
 WesternNative.py | SUCCESS | Ran successfully (only parser warning)
