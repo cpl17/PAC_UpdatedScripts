@@ -22,9 +22,9 @@ DEBUG_DIR = Path(__file__).resolve().parents[1] / "DebugOutput" / SCRIPT_NAME
 DEBUG_DIR.mkdir(parents=True, exist_ok=True)
 
 headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-    'Accept-Language': 'en-US,en;q=0.9'
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
 }
 
 era = get_sheet_data("ERAFull","ERAFull")
@@ -38,15 +38,32 @@ all_names = []
 all_urls = []
 
 
-urls = ["https://www.westernnativeseed.com/wildflowers.html","https://www.westernnativeseed.com/grasses.html","https://www.westernnativeseed.com/trees.html"]
+urls = [
+    "https://www.westernnativeseed.com/wildflowers.html",
+    "https://new.westernnativeseed.com/grasses/",
+    "https://www.westernnativeseed.com/trees.html",
+]
 
 
 for url in urls:
 
-    response = requests.get(url,headers=headers)
+    response = requests.get(url, headers=headers, timeout=60)
+    response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
-    links = [link['href'] for link in soup.select("tr td a")]
-    names = [link.text.strip() for link in soup.select("tr td a")]
+    product_cards = soup.select("li.product")
+    links = []
+    names = []
+    for card in product_cards:
+        link_el = card.select_one("a.woocommerce-LoopProduct-link")
+        name_el = card.select_one("h2.woocommerce-loop-product__title")
+        if not link_el or not name_el:
+            continue
+        href = (link_el.get("href") or "").strip()
+        name = name_el.get_text(" ", strip=True)
+        if not href or not name:
+            continue
+        links.append(href)
+        names.append(name)
 
     all_names.extend(names)
     all_urls.extend(links)

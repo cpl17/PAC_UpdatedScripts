@@ -1,5 +1,5 @@
 Full US Updated - Script Tracker
-Last updated: 2026-05-08T15:19:00
+Last updated: 2026-05-08T15:29:00
 
 Legend: SUCCESS = ran end-to-end | FAIL = script crashed | BLOCKED = not re-tested | UNKNOWN = not tested
 
@@ -17,7 +17,7 @@ PlantMore.py | SUCCESS | Refactored to requests + BeautifulSoup on BigCommerce `
 PrairieMoon.py | SUCCESS | Updated Selenium scraping for JS-rendered cards (`.g-product-card`, scientific name from `.g-product-card__brand`) and hash pagination at 48/page. Debug run: pages 1-14, raw=668, matches pre-dedupe=541, final=541.
 SouthernSeeds.py | SUCCESS | Updated to parse product cards + links and match ERA scientific names from product URL slugs; pagination now stops when no cards. Debug run: raw=470, matches pre-dedupe=102, final=76.
 ToadShade.py | SUCCESS | Replaced `pd.read_html` dependency with BeautifulSoup row parsing of `SpeciesList.html`; scientific names normalized from species row italics, URLs mapped from row links. Debug run: availability=439, matches pre-dedupe=405, final=405.
-WesternNative.py | SUCCESS | Ran successfully (only parser warning)
+WesternNative.py | SUCCESS | Updated for current WooCommerce product cards (`li.product` with `a.woocommerce-LoopProduct-link` + `h2.woocommerce-loop-product__title`) and valid grasses URL (`https://new.westernnativeseed.com/grasses/`). Debug run: raw=364, matches pre-dedupe=301, final=299.
 
 Quick commands:
 - Activate venv: source "../../.venv/bin/activate"
