@@ -1,97 +1,85 @@
 import pandas as pd
-import time
-import math
+import requests
+from bs4 import BeautifulSoup
 from datetime import datetime
 from pathlib import Path
 
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-
-from Helpers import get_sheet_data,write_df_to_sheet
+from Helpers import get_sheet_data, write_df_to_sheet
 
 DEBUG = True
-WRITE_TO_SHEET = True
+WRITE_TO_SHEET = False
 SCRIPT_NAME = "Izel"
 DEBUG_DIR = Path(__file__).resolve().parents[1] / "DebugOutput" / SCRIPT_NAME
 DEBUG_DIR.mkdir(parents=True, exist_ok=True)
 
-options = Options()
-options.add_argument("start-maximized")
-options.add_experimental_option("detach", True)
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
 
-DELAY = 2
-
-
-
-era = get_sheet_data("ERAFull","ERAFull")
-scientific_names = era["Scientific Name"].to_list()
-scientific_name_set = set(scientific_names)
-
-driver = webdriver.Chrome(options=options)
-
+era = get_sheet_data("ERAFull", "ERAFull")
+era["Scientific Name"] = era["Scientific Name"].astype(str).str.strip()
+scientific_name_set = set(era["Scientific Name"])
 
 matches_list = []
 match_urls_list = []
 all_names = []
 all_links = []
 
-#Get the number of pages - depends on the number of plants listed 
-home_page = "https://www.izelplants.com/all-plants/?product_list_limit=128"
-driver.get(home_page)
-WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH,'//*[@id="amasty-shopby-product-list"]/div[1]/div[1]/span')))
+page_number = 1
+while True:
+    page_url = f"https://www.izelplants.com/all-plants/?p={page_number}&product_list_limit=128"
+    response = requests.get(page_url, headers=headers, timeout=60)
 
-num_plants_string = driver.find_element(By.XPATH,'//*[@id="amasty-shopby-product-list"]/div[1]/div[1]/span').text
-num_plants = int(num_plants_string.split(" ")[-1])
-num_pages = math.ceil(num_plants / 128)
+    if response.status_code == 404:
+        if DEBUG:
+            print(f"[DEBUG] Page {page_number}: received 404, stopping pagination.")
+        break
 
-for page_number in range(1,num_pages + 1):
-# for page_number in range(1,3):
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, "html.parser")
+    link_elements = soup.select("a.product-item-link")
 
-    if page_number != 1:
+    if not link_elements:
+        if DEBUG:
+            print(f"[DEBUG] Page {page_number}: no product links found, stopping.")
+        break
 
-        page = f"https://www.izelplants.com/all-plants/?p={page_number}&product_list_limit=128"
-        driver.get(page)
-        WebDriverWait(driver, DELAY).until(EC.presence_of_element_located((By.CSS_SELECTOR,"a.product-item-link")))
-        time.sleep(5)
-
-
-    link_elements = driver.find_elements(By.CSS_SELECTOR,"a.product-item-link")
-    all_links += [link.get_attribute("href") for link in link_elements]
-    if DEBUG:
-        print(f"[DEBUG] Page {page_number}: found {len(link_elements)} product links")
-
+    page_names = []
+    page_links = []
     for link in link_elements:
+        href = link.get("href")
+        name = link.get_text(strip=True)
+        if not href or not name:
+            continue
+        page_links.append(href)
+        page_names.append(name)
 
-        # name_element = link.find_element(By.TAG_NAME,"span")
-        name = link.text
+    if DEBUG:
+        print(f"[DEBUG] Page {page_number}: found {len(page_links)} product links")
+
+    for name, href in zip(page_names, page_links):
         all_names.append(name)
-
-
+        all_links.append(href)
         if name in scientific_name_set:
             if DEBUG:
                 print(f"[DEBUG] Match on page {page_number}: {name}")
             matches_list.append(name)
-            match_urls_list.append(link.get_attribute("href"))
+            match_urls_list.append(href)
 
-    time.sleep(5)
+    page_number += 1
 
+era = era[["USDA Symbol", "Scientific Name"]]
+matches_df = pd.DataFrame(
+    {"Scientific Name": matches_list, "Root": ["IzelPlants.com"] * len(matches_list), "URL": match_urls_list}
+)
+raw_df = pd.DataFrame({"Scientific Name": all_names, "URL": all_links})
 
-
-era = era[["USDA Symbol","Scientific Name"]]
-
-
-matches_df = pd.DataFrame({"Scientific Name":matches_list,"Root":["IzelPlants.com"]*(len(matches_list)),"URL":match_urls_list})
-raw_df = pd.DataFrame({"Scientific Name":all_names,"URL":all_links})
-
-#Matches Df
-final = pd.merge(matches_df,era,on="Scientific Name",how="left")
-final.rename({"USDA Symbol":"USDA"},axis=1,inplace=True)
-final = final[["USDA","Scientific Name","Root","URL"]]
-final = final.drop_duplicates(subset="Scientific Name",keep="first")
+final = pd.merge(matches_df, era, on="Scientific Name", how="left")
+final.rename({"USDA Symbol": "USDA"}, axis=1, inplace=True)
+final = final[["USDA", "Scientific Name", "Root", "URL"]]
+final = final.drop_duplicates(subset="Scientific Name", keep="first")
 
 if DEBUG:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -102,7 +90,13 @@ if DEBUG:
     print(f"[DEBUG] Wrote debug CSV snapshots to {DEBUG_DIR}")
 
 if WRITE_TO_SHEET:
-    write_df_to_sheet("All_Online_Scraped_Data_Full",f"Izel",final)
+    if len(final) == 0:
+        print("[DEBUG] Skipping sheet write: final dataframe is empty.")
+    else:
+        try:
+            write_df_to_sheet("All_Online_Scraped_Data_Full", "Izel", final)
+        except Exception as exc:
+            print(f"[DEBUG] Sheet write failed for tab 'Izel': {exc}")
 
 #Full Inventory 
 # full_inventory_df = pd.DataFrame({"Scientific Name":all_names,"Root":["IzelPlants.com"]*(len(all_names)),"URL":all_links})
