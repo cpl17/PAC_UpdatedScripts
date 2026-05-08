@@ -1,14 +1,8 @@
 import pandas as pd
-import time
+import requests
+from bs4 import BeautifulSoup
 from datetime import datetime
 from pathlib import Path
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 
 from Helpers import get_sheet_data,write_df_to_sheet
 
@@ -18,19 +12,11 @@ SCRIPT_NAME = "PlantMore"
 DEBUG_DIR = Path(__file__).resolve().parents[1] / "DebugOutput" / SCRIPT_NAME
 DEBUG_DIR.mkdir(parents=True, exist_ok=True)
 
-options = Options()
-options.add_argument("start-maximized")
-options.add_experimental_option("detach", True)
-
-DELAY = 2
-
-
-# #Function that waits until the correct page is selected
-# def wait_until_page_load(page_index):
-
-#     if int(driver.find_element(By.CLASS_NAME,"wsite-selected").text) != (page_index +2):
-#         time.sleep(5)
-#         wait_until_page_load(page_index)
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
 
 
 
@@ -43,62 +29,51 @@ match_urls_list = []
 all_names = []
 all_links = []
 
-
 ######### Scraping #########
+base_page = "https://www.plantmorenatives.com/plants/"
+page_number = 1
+while True:
+    page_url = f"{base_page}?page={page_number}"
+    response = requests.get(page_url, headers=headers, timeout=60)
+    if response.status_code == 404:
+        if DEBUG:
+            print(f"[DEBUG] Page {page_number}: 404 received, stopping.")
+        break
+    response.raise_for_status()
 
-driver = webdriver.Chrome(options=options)
+    soup = BeautifulSoup(response.text, "html.parser")
+    cards = soup.select("ul.productGrid li.product article.card")
+    if not cards:
+        if DEBUG:
+            print(f"[DEBUG] Page {page_number}: no product cards found, stopping.")
+        break
 
-home_page = "https://www.plantmorenatives.com/store/c26/native_perennial_plant_store#/"
-
-driver.get(home_page)
-
-#Wait for pop-up and close. It does not return 
-time.sleep(10)
-pop_up = driver.find_element(By.XPATH,"//*[@id='leadform-popup-close-576d6d25-a6a2-40cb-ab77-1205e75d2f2e']")
-pop_up.click()
-
-
-
-xpaths_for_pages = ["first page"] + [f"//*[@id='wsite-com-category-product-group-pagelist']/a[{page_number}]" for page_number in range(3,8)]
-for page_index,path in enumerate(xpaths_for_pages):
-
-    if path != "first page":
-
-        page_element = driver.find_element(By.XPATH,path)
-        page_element.click()
-
-        time.sleep(5)
-
-        # wait_until_page_load(page_index)
-
-    #Get all the links and plant names on the page
-    link_elements = driver.find_elements(By.CLASS_NAME,"wsite-com-category-product-link")
-    links = [link.get_attribute("href") for link in link_elements]
-    all_links.extend(links)
-    
-    name_elements = driver.find_elements(By.CLASS_NAME,"wsite-com-link-text")
-    names_full_text = [name.text for name in name_elements]
-    names = [x.split("'")[0].split("(")[0].strip("\n").rstrip() for x in names_full_text]
-    all_names.extend(names)
-    if DEBUG:
-        print(f"[DEBUG] Page index {page_index}: links={len(links)}, names={len(names)}")
-
-    assert len(names) == len(links)
-
-    
-    for name,link in list(zip(names,links)):
-
-
+    page_links = []
+    page_names = []
+    for card in cards:
+        link_el = card.select_one("h3.card-title a[href]")
+        raw_name = (card.get("data-name") or "").strip()
+        if not link_el or not raw_name:
+            continue
+        link = link_el["href"].strip()
+        name = raw_name.split("'")[0].split("(")[0].strip()
+        if not link or not name:
+            continue
+        page_links.append(link)
+        page_names.append(name)
+        all_links.append(link)
+        all_names.append(name)
         if name in scientific_name_set:
             if DEBUG:
-                print(f"[DEBUG] Match on page index {page_index}: {name}")
+                print(f"[DEBUG] Match on page {page_number}: {name}")
             matches_list.append(name)
             match_urls_list.append(link)
 
-    
+    if DEBUG:
+        print(f"[DEBUG] Page {page_number}: links={len(page_links)}, names={len(page_names)}")
+        print(f"[DEBUG] Page {page_number}: sample names={page_names[:5]}")
 
-
-driver.close()
+    page_number += 1
 
 
 
